@@ -48,8 +48,7 @@ Returns an array of contributors for the specified repository.
 
 .EXAMPLE
 # Example usage:
-# Set the token and enterprise name
-$token = "your_github_token"
+# Set the enterprise name
 $enterprise = "your_enterprise_name"
 
 # Run the script to fetch organizations, repositories, and contributors
@@ -57,7 +56,6 @@ $enterprise = "your_enterprise_name"
 
 .EXAMPLE
 # If the enterprise name is incorrect or the token lacks permissions, the script will attempt to list organizations the user belongs to:
-$token = "your_github_token"
 $enterprise = "invalid_enterprise_name"
 
 # The script will fallback to listing user organizations and their repositories.
@@ -73,7 +71,6 @@ param(
 )
 # Set your GitHub token and enterprise name
 $token = $env:GITHUB_TOKEN
-  # e.g., "mycompany"
 
 #print the $token and enterprise name
 Write-Host "Enterprise: $enterprise"
