@@ -10,6 +10,9 @@ Finally, it outputs a list of unique contributors across all projects and reposi
 .PARAMETER OrganizationName
 The name of the Azure DevOps organization to query.
 
+.PARAMETER FileOutputCsv
+Optional. The path to a CSV file where the unique contributors' emails will be written.
+
 .NOTES
 - The script requires a Personal Access Token (PAT) to authenticate with Azure DevOps. 
     The PAT must be stored in the environment variable `AZURE_DEVOPS_PAT`.
@@ -21,14 +24,22 @@ The name of the Azure DevOps organization to query.
 
 This example retrieves the unique contributors for all projects and repositories in the Azure DevOps organization "MyOrganization".
 
+.EXAMPLE
+.\FindingCollectionContributors.ps1 -OrganizationName "MyOrganization" -FileOutputCsv "contributors.csv"
+
+This example retrieves the unique contributors for all projects and repositories in the Azure DevOps organization "MyOrganization" and writes their emails to "contributors.csv".
+
 .OUTPUTS
 - Writes the list of unique contributors to the console, grouped by project and repository.
 - Outputs a summary of all unique contributors across all projects and repositories.
+- Optionally writes the unique contributors' emails to a specified CSV file.
 
 #>
 param(
     [Parameter(Mandatory=$true)]
-    [string]$OrganizationName
+    [string]$OrganizationName,
+    [Parameter(Mandatory=$true)]
+    [string]$FileOutputCsv
 )
 
 # Build organization URL
@@ -80,3 +91,10 @@ foreach ($Project in $Projects) {
 
 Write-Host "\n=== Unique Contributors Across All Projects and Repos ==="
 $AllContributors.Values | Sort-Object name | ForEach-Object { Write-Host ("{0} <{1}>" -f $_.name, $_.email) }
+
+# Write emails to CSV if parameter is provided
+if ($FileOutputCsv) {
+    $Emails = $AllContributors.Values | Select-Object -ExpandProperty email | Sort-Object -Unique
+    $Emails | Set-Content -Path $FileOutputCsv
+    Write-Host "\nContributor emails written to $FileOutputCsv"
+}
