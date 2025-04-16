@@ -10,6 +10,12 @@ This repository is a collection of scripts designed for Developer Advocates to s
 ## Getting Started
 Scripts are organized by topic in subfolders. See each script's documentation for usage instructions.
 
+## Recent Changes
+- Added a common `.gitignore` for typical development environments.
+- Refactored `ADO/FindingCollectionContributors.ps1` to report unique commit contributors across all projects and repos, removing team member listing.
+- Added `EntraID/AddUsersToSecurityGroup.ps1` to read a file of emails and add users to an Entra ID (Azure AD) security group. Now uses `New-MgGroupMember` for compatibility with the latest Microsoft Graph module.
+- Updated PowerShell launch configuration to debug the currently open file.
+
 ---
 
 Contributions and suggestions are welcome!
