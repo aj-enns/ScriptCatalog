@@ -17,6 +17,9 @@ The name of the GitHub Enterprise instance. For example, "mycompany". If not usi
 .PARAMETER $headers
 A hashtable containing the headers required for API requests, including authorization and content type.
 
+.PARAMETER $FileOutputCsv
+Optional parameter. If provided, writes each unique contributor's email to a new line in the specified file after processing all contributors.
+
 .FUNCTION Get-OrgRepositories
 Fetches all repositories for a given organization. Supports pagination to handle large numbers of repositories.
 
@@ -67,7 +70,10 @@ $enterprise = "invalid_enterprise_name"
 #>
 
 param(
-    [string]$enterprise  # e.g., "mycompany"
+    [Parameter(Mandatory=$true)]
+    [string]$enterprise,  # e.g., "mycompany"
+    [Parameter(Mandatory=$true)]
+    [string]$FileOutputCsv
 )
 # Set your GitHub token and enterprise name
 $token = $env:GITHUB_TOKEN
@@ -109,7 +115,7 @@ function Get-OrgRepositories {
             $repos += $repoResponse
             
             Write-Host "Found $($repoResponse.Count) repositories on page $page for organization $orgName"
-            $page++
+            $page++ 
         }
         catch {
             Write-Host "Error fetching repositories for $orgName : $_"
@@ -165,6 +171,7 @@ do {
 
 # Collect unique contributors
 $uniqueContributors = @{}
+$uniqueContributorEmails = @{}
 
 # Output results
 if ($orgs.Count -gt 0) {
@@ -182,6 +189,21 @@ if ($orgs.Count -gt 0) {
             $contributors = Get-RepoContributors -repoFullName $repo.full_name -headers $headers
             foreach ($contributor in $contributors) {
                 $uniqueContributors[$contributor.login] = $true
+                if ($contributor.email -and $contributor.email -ne "") {
+                    $uniqueContributorEmails[$contributor.email] = $true
+                }
+                # Try to get the user's public email from the GitHub API if not already present
+                if (-not $uniqueContributorEmails.ContainsKey($contributor.login)) {
+                    $userUrl = "https://api.github.com/users/$($contributor.login)"
+                    try {
+                        $userResponse = Invoke-RestMethod -Uri $userUrl -Headers $headers -Method Get -ErrorAction Stop
+                        if ($userResponse.email -and $userResponse.email -ne "") {
+                            $uniqueContributorEmails[$userResponse.email] = $true
+                        }
+                    } catch {
+                        Write-Host "Could not fetch public email for $($contributor.login)"
+                    }
+                }
             }
         }
     }
@@ -212,6 +234,21 @@ else {
                     $contributors = Get-RepoContributors -repoFullName $repo.full_name -headers $headers
                     foreach ($contributor in $contributors) {
                         $uniqueContributors[$contributor.login] = $true
+                        if ($contributor.email -and $contributor.email -ne "") {
+                            $uniqueContributorEmails[$contributor.email] = $true
+                        }
+                        # Try to get the user's public email from the GitHub API if not already present
+                        if (-not $uniqueContributorEmails.ContainsKey($contributor.login)) {
+                            $userUrl = "https://api.github.com/users/$($contributor.login)"
+                            try {
+                                $userResponse = Invoke-RestMethod -Uri $userUrl -Headers $headers -Method Get -ErrorAction Stop
+                                if ($userResponse.email -and $userResponse.email -ne "") {
+                                    $uniqueContributorEmails[$userResponse.email] = $true
+                                }
+                            } catch {
+                                Write-Host "Could not fetch public email for $($contributor.login)"
+                            }
+                        }
                     }
                 }
             }
@@ -228,7 +265,7 @@ else {
         $contributors = Get-RepoContributors -repoFullName $repo.full_name -headers $headers
         if ($contributors.Count -gt 0) {
             Write-Host "Contributors:"
-            $contributors | Select-Object login, contributions | Format-Table -AutoSize
+            $contributors | Select-Object login, contributions, email | Format-Table -AutoSize
         } else {
             Write-Host "No contributors found."
         }
@@ -238,4 +275,10 @@ else {
 # Print unique contributors
 Write-Host "`n=== Unique Contributors Across All Orgs and Repos ==="
 $uniqueContributors.Keys | Sort-Object | ForEach-Object { Write-Host $_ }
+
+# Write emails to CSV if parameter is provided
+if ($FileOutputCsv) {
+    $uniqueContributorEmails.Keys | Sort-Object | Set-Content -Path $FileOutputCsv
+    Write-Host "`nContributor emails written to $FileOutputCsv"
+}
 
