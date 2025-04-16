@@ -161,8 +161,7 @@ do {
         
         Write-Host "Found $($response.Count) organizations on page $page"
         $page++
-    }
-    catch {
+    } catch {
         Write-Host "Error: $_"
         Write-Host "Response: $($_.ErrorDetails.Message)"
         break
@@ -255,8 +254,7 @@ else {
         } else {
             Write-Host "No organizations found that you belong to."
         }
-    }
-    catch {
+    } catch {
         Write-Host "Error fetching user organizations: $_"
     }
 
