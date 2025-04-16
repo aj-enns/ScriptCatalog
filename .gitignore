@@ -1,0 +1,42 @@
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# VS Code
+.vscode/
+.history/
+
+# PowerShell
+*.ps1~
+*.ps1.save
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Mac
+.DS_Store
+
+# General
+.env
+*.swp
+*.swo
+.idea/
+*.bak
+*.tmp
+*.temp
+
+# PHP
+vendor/
+
+# Others
+*.user
+*.sublime-workspace
+*.sublime-project
